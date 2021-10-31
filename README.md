@@ -37,29 +37,11 @@ Using npm:
 $ npm install async-abort
 ```
 
-<!-- Using bower:
-
-```bash
-$ bower install async-abort
-```
-
 Using yarn:
 
 ```bash
 $ yarn add async-abort
 ```
-
-Using jsDelivr CDN:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/async-abort/dist/async-abort.min.js"></script>
-``` -->
-
-<!-- Using unpkg CDN:
-
-```html
-<script src="https://unpkg.com/async-abort/dist/async-abort.min.js"></script>
-``` -->
 
 
 ## Preventing Memory leaks in React Component
@@ -91,14 +73,14 @@ Using jsDelivr CDN:
    }
  ```
   Now what happens when the above component is mounted and umounted immediately
-      1. the `fetchTodosOfUser` is called on mount and it holds the references
-         to the `setTodos` and `setFailed` callbacks
-      2. while the promise is still being settled the component will unmount, 
-         in order for component to completely unmount and garbage collected, all the references must be cleared.
-         but the promise holds the references of the setState callbacks untill it settles
-      3. this will stop the component from garbage collected and leads to memory leak
-      4. even if you use AbortController or some flags to 
-       stop setting the state in your code, the references are still attached and it will not prevent the memory leak
+  1. the `fetchTodosOfUser` is called on mount and it holds the references
+    to the `setTodos` and `setFailed` callbacks
+  2. while the promise is still being settled the component will unmount, 
+    in order for component to completely unmount and garbage collected, all the references must be cleared.
+    but the promise holds the references of the setState callbacks untill it settles
+  3. this will stop the component from garbage collected and leads to memory leak
+  4. even if you use AbortController or some flags to 
+  stop setting the state in your code, the references are still attached and it will not prevent the memory leak
 
 Using AsyncAbort to prevent this leak: 
 
@@ -134,13 +116,13 @@ Using AsyncAbort to prevent this leak:
    }
 ```
   Now what happens when the above component is mounted and umounted immediately
-      1. the `fetchTodosOfUser` is called on mount through AsyncAbort
-      2. the component gets unmounted while the promise is still being settled  and 
-         `cancel()` is called in cleanup method of hook this will remove the references
-         of then,catch,finally callbacks which are attached to the `fetchTodoOfUser`
-         **note** cancel won't stop promise from being settling
-      3. after calling cancel() no more references of component are held, the component is garbage collected.
-      4. thus no more memory leaks
+  1. the `fetchTodosOfUser` is called on mount through AsyncAbort
+  2. the component gets unmounted while the promise is still being settled  and 
+      `cancel()` is called in cleanup method of hook this will remove the references
+      of then,catch,finally callbacks which are attached to the `fetchTodoOfUser`
+      **note** cancel won't stop promise from being settling
+  3. after calling cancel() no more references of component are held, the component is garbage collected.
+  4. thus no more memory leaks
 
 
 ## Other Examples
