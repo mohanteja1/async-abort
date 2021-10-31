@@ -1,13 +1,12 @@
 # async-abort
 
 [![npm version](https://img.shields.io/npm/v/async-abort.svg?style=flat-square)](https://www.npmjs.org/package/async-abort)
-<!-- [![CDNJS](https://img.shields.io/cdnjs/v/async-abort.svg?style=flat-square)](https://cdnjs.com/libraries/async-abort) -->
-[![code coverage](https://img.shields.io/coveralls/mzabriskie/async-abort.svg?style=flat-square)](https://coveralls.io/r/mzabriskie/async-abort)
-<!-- [![install size](https://packagephobia.now.sh/badge?p=async-abort)](https://packagephobia.now.sh/result?p=async-abort) -->
+[![install size](https://packagephobia.now.sh/badge?p=async-abort)](https://packagephobia.now.sh/result?p=async-abort)
+[![bundle size](https://badgen.net/bundlephobia/min/async-abort)](https://badgen.net/bundlephobia/min/async-abort)
 [![npm downloads](https://img.shields.io/npm/dm/async-abort.svg?style=flat-square)](http://npm-stat.com/charts.html?package=async-abort)
 
 
-A canceleable promise utility which helps solve memory leak in react components that cannot be solved using 
+A canceleable promise utility which helps solve memory leak in asynchronous code in a react components which cannot be solved using AbortController or other hooks which uses similar type of cancelling mechanisms. AsyncAbort internally uses `dont care policy` for the promise cancellation ie.. it won't stop the promises from settling but it stops callbacks attached from being called. It does so by detaching the loosely attached callbacks from promise and preventing memory references of these callbacks from being held by promise call which can cause memory leak if not.
 ## Table of Contents
 
   - [Features](#features)
@@ -90,8 +89,8 @@ Using jsDelivr CDN:
          ))}
        </div>)
    }
-
-   /* Now what happens when the above component is mounted and umounted immediately
+ ```
+  Now what happens when the above component is mounted and umounted immediately
       1. the `fetchTodosOfUser` is called on mount and it holds the references
          to the `setTodos` and `setFailed` callbacks
       2. while the promise is still being settled the component will unmount, 
@@ -100,9 +99,7 @@ Using jsDelivr CDN:
       3. this will stop the component from garbage collected and leads to memory leak
       4. even if you use AbortController or some flags to 
        stop setting the state in your code, the references are still attached and it will not prevent the memory leak
-   */
 
- ```
 Using AsyncAbort to prevent this leak: 
 
 ```javascript
@@ -119,7 +116,7 @@ Using AsyncAbort to prevent this leak:
               setTodos(resp.todos);
             }).catch((err) => {
               setFailed(true);
-            });
+            }).call();
         return () => {
            cancel();
         }
@@ -135,17 +132,15 @@ Using AsyncAbort to prevent this leak:
          ))}
        </div>)
    }
-   /* Now what happens when the above component is mounted and umounted immediately
+```
+  Now what happens when the above component is mounted and umounted immediately
       1. the `fetchTodosOfUser` is called on mount through AsyncAbort
       2. the component gets unmounted while the promise is still being settled  and 
          `cancel()` is called in cleanup method of hook this will remove the references
          of then,catch,finally callbacks which are attached to the `fetchTodoOfUser`
-         > **note** cancel won't stop promise from being settling
+         **note** cancel won't stop promise from being settling
       3. after calling cancel() no more references of component are held, the component is garbage collected.
       4. thus no more memory leaks
-   */
-
-```
 
 
 ## Other Examples
@@ -159,7 +154,7 @@ const AsyncAbort = require('async-abort').default;
 // AsyncAbort.<method> will now provide autocomplete and parameter typings
 ```
 
->simple example of calling an `Async Function` or `Any Promise returning Function`
+Example for calling an `Async Function` or `Any Promise returning Function`
 
 ```js
 import AsyncAbort from 'async-abort';
@@ -195,7 +190,7 @@ new AsyncAbort(somePromiseReturningFunc, [arg1Value, arg2Value])
     }).call();
 
 ```
->Action Blocks can be omitted
+Action Blocks can be omitted
 
 ```js
  // then and finally are omitted
@@ -215,7 +210,7 @@ new AsyncAbort(somePromiseReturningFunc, [arg1Value, arg2Value])
 ```
 **note** : `.call()` is necessary to call the async function that is passed
 
->Cancellig execution of Action blocks
+Cancellig execution of Action blocks
 
 ```js
 
