@@ -6,7 +6,10 @@
 [![npm downloads](https://img.shields.io/npm/dm/async-abort.svg?style=flat-square)](http://npm-stat.com/charts.html?package=async-abort)
 
 
-A canceleable promise utility which helps solve memory leak in asynchronous code in a react components which cannot be solved using AbortController or other hooks which uses similar type of cancelling mechanisms. AsyncAbort internally uses `dont care policy` for the promise cancellation ie.. it won't stop the promises from settling but it stops callbacks attached from being called. It does so by detaching the loosely attached callbacks from promise and preventing memory references of these callbacks from being held by promise call which can cause memory leak if not.
+
+A canceleable promise utility which helps solve memory leak in asynchronous code in a react components which cannot be solved using [AbortController]() or other hooks which uses similar type of cancelling mechanisms. 
+AsyncAbort internally uses `dont care policy` for the promise cancellation ie.. it won't stop the promises from settling but it stops callbacks attached from being called. It does so by detaching the loosely attached callbacks from promise and preventing memory references of these callbacks from being held by promise call which can cause memory leak if not.
+
 ## Table of Contents
 
   - [Features](#features)
@@ -20,9 +23,9 @@ A canceleable promise utility which helps solve memory leak in asynchronous code
 
 ## Features
 
-- Ability to prevent execution of actions (then, catch, finally blocks) than happen when a [promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) returned from async function settles.
+- Ability to prevent execution of actions (then, catch, finally blocks) that happen when a [promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) returned from async function settles.
 - Useful in Preventing Memory leaks resulting in asynchronous code in React components
-
+- works with any kind of promises (native or bluebord or any other polyfills)
 ## Browser Support
 
 ![Chrome](https://raw.github.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.github.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![Safari](https://raw.github.com/alrra/browser-logos/master/src/safari/safari_48x48.png) | ![Opera](https://raw.github.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Edge](https://raw.github.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![IE](https://raw.github.com/alrra/browser-logos/master/src/archive/internet-explorer_9-11/internet-explorer_9-11_48x48.png) |
@@ -45,18 +48,20 @@ $ yarn add async-abort
 
 
 ## Preventing Memory leaks in React Component
- A React Component that will leak: 
+A React Component that will leak: 
  ```javascript
    
    function ALeakyTodoComponent({ userId }) {
        const [todos, setTodos] = useState([]);
        const [failed, setFailed] = useState(false);
+
        useEffect(() => {
           // on mount 
-          fetchTodosOfUser(userId).
-            then((resp) => {
+          fetchTodosOfUser(userId)
+            .then((resp) => {
               setTodos(resp.todos);
-            }).catch((err) => {
+            })
+            .catch((err) => {
               setFailed(true);
             });
        }, [userId]);
@@ -72,6 +77,7 @@ $ yarn add async-abort
        </div>)
    }
  ```
+
   Now what happens when the above component is mounted and umounted immediately
   1. the `fetchTodosOfUser` is called on mount and it holds the references
     to the `setTodos` and `setFailed` callbacks
@@ -93,12 +99,14 @@ Using AsyncAbort to prevent this leak:
        const [failed, setFailed] = useState(false);
        useEffect(() => {
           // on mount 
-         const cancel = new AsyncAbort(fetchTodosOfUser, [userId]).
-            then((resp) => {
+         const cancel = new AsyncAbort(fetchTodosOfUser, [userId])
+            .then((resp) => {
               setTodos(resp.todos);
-            }).catch((err) => {
+            })
+            .catch((err) => {
               setFailed(true);
-            }).call();
+            })
+            .call();
         return () => {
            cancel();
         }
@@ -115,6 +123,7 @@ Using AsyncAbort to prevent this leak:
        </div>)
    }
 ```
+
   Now what happens when the above component is mounted and umounted immediately
   1. the `fetchTodosOfUser` is called on mount through AsyncAbort
   2. the component gets unmounted while the promise is still being settled  and 
@@ -192,7 +201,7 @@ Action Blocks can be omitted
 ```
 **note** : `.call()` is necessary to call the async function that is passed
 
-Cancellig execution of Action blocks
+Cancelling execution of Action blocks
 
 ```js
 
