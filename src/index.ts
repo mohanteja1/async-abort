@@ -1,8 +1,12 @@
 import { nanoid } from "nanoid";
 
 interface CallbackData {
-  type: string,
-  value: any
+  value: any,
+  id: number,
+}
+interface Chain {
+  type: any,
+  block: Callback,
 }
 
 type Callback = (...args: any[]) => any;
@@ -25,7 +29,7 @@ class SimpleSingleCallbackObserver {
 
     emit(id: string, event: any) {
         if (this.listeners.has(id)) {
-            this.listeners.get(id)?.(event);
+            return this.listeners.get(id)?.(event);
         }
     }
 }
@@ -33,69 +37,76 @@ class SimpleSingleCallbackObserver {
 const PromiseObserver = new SimpleSingleCallbackObserver();
 
 class AsyncAbort {
-    id: string;
-    asyncFun: AsyncFunction|undefined;
-    asyncFunParams: Array<any>;
-    thenBlock: Callback|undefined;
-    catchBlock: Callback|undefined;
-    finallyBlock: Callback|undefined;
+  id: string;
+  asyncFun: AsyncFunction|undefined;
+  asyncFunParams: Array<any>;
+  chains: Array<Chain>;
 
-    constructor(asyncFun: AsyncFunction, params: Array<any> = []) {
-      this.id = nanoid(7);
-      this.asyncFun = asyncFun;
-      this.asyncFunParams = params;
-    }
-  
-    then(callback: Callback): AsyncAbort {
-      this.thenBlock = callback;
-      return this;
-    }
-  
-    catch(callback: Callback): AsyncAbort {
-      this.catchBlock = callback;
-      return this;
-    }
-  
-    finally(callback: Callback): AsyncAbort {
-      this.finallyBlock = callback;
-      return this;
-    }
-  
-    call(): Callback {
-      if (!this.asyncFun) return;
-      const callback = (data: CallbackData) => {
-        const { type, value } = data;
-        switch (type) {
-          case "then":
-            if (this.thenBlock) this.thenBlock(value);
-            break;
-          case "catch":
-            if (this.catchBlock) this.catchBlock(value);
-            break;
-          case "finally":
-            if (this.finallyBlock) this.finallyBlock(value);
-            break;
-          default:
-        }
-      };
+  constructor(asyncFun: AsyncFunction, params: Array<any> = []) {
+    this.id = nanoid(7);
+    this.asyncFun = asyncFun;
+    this.asyncFunParams = params;
+  }
 
-      PromiseObserver.add(this.id, callback);
-      const cancel = () => {
-        PromiseObserver.remove(this.id);
-      };
-      this.asyncFun(...this.asyncFunParams)
-        .then((resp: any) => {
-          PromiseObserver.emit(this.id, { type: "then", value: resp });
-        })
-        .catch((error: any) => {
-          PromiseObserver.emit(this.id, { type: "catch", value: error });
-        })
-        .finally(() => {
-          PromiseObserver.emit(this.id, { type: "finally" });
-          PromiseObserver.remove(this.id);
-        });
-      return cancel;
-    }
+  then(callback: Callback): AsyncAbort {
+    this.chains.push({ type: 'then', block: callback})
+    return this;
+  }
+
+  catch(callback: Callback): AsyncAbort {
+    this.chains.push({ type: 'catch', block: callback})
+    return this;
+  }
+
+  finally(callback: Callback): AsyncAbort {
+    this.chains.push({ type: 'finally', block: callback})
+    return this;
+  }
+
+  private clearReferences() {
+    this.asyncFun = undefined;
+    this.asyncFunParams = undefined;
+    this.chains = undefined;
+  }
+
+  call(): Callback {
+    if (!this.asyncFun) return;
+    
+    this.chains.push({ type: 'finally', block: () => {
+      PromiseObserver.remove(this.id);
+    }})
+
+
+    const callback = (data: CallbackData) => {
+      const { id, value } = data;
+      return this.chains[id].block(value);
+    };
+
+    PromiseObserver.add(this.id, callback);
+
+    const cancel = () => {
+      PromiseObserver.remove(this.id);
+      this.clearReferences();
+    };
+
+    let promise = this.asyncFun(...this.asyncFunParams);
+    this.chains.forEach(({ type }, index) => {
+      switch (type) {
+        case 'then':
+          promise = promise.then((value) => {
+            return PromiseObserver.emit(this.id, { id: index, value: value});
+          });
+        case 'catch':
+          promise = promise.catch((error) => {
+            return PromiseObserver.emit(this.id, { id: index, value: error});
+          });
+        case 'finally':
+          promise = promise.finally(() => {
+            return PromiseObserver.emit(this.id, { id: index });
+          });
+      }
+    });
+    return cancel;
+  }
 }
-
 export default AsyncAbort;
