@@ -1,7 +1,34 @@
 const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const config = {
+const devConfig = {
+  entry: path.join(__dirname, "demo/src", "index.js"),
+  output: {
+    path:path.resolve(__dirname, "demo/dist"),
+  },
+  module: {
+    rules: [
+      {
+        test: /\.?js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react']
+          }
+        }
+      },
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "demo", "index.html"),
+    }),
+  ],
+}
+
+const prodConfig = {
   target: 'web',
   entry: {
     index: './src/index.ts',
@@ -46,14 +73,13 @@ const config = {
   },
 };
 
+
 module.exports = (env, argv) => {
   if (argv.mode === 'development') {
-    // * add some development rules here
+    return devConfig;
   } else if (argv.mode === 'production') {
-    // * add some prod rules here
+    return prodConfig
   } else {
     throw new Error('Specify env');
   }
-
-  return config;
 };
