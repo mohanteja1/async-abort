@@ -1,17 +1,14 @@
 import AsyncAbort from '../src/index';
+import flushPromises from 'flush-promises';
 
-beforeEach(() => {
+beforeAll(() => {
   jest.useFakeTimers();
   jest.setTimeout(100000);
 })
 
-afterEach(() => {
+afterAll(() => {
   jest.clearAllTimers();
 })
-
-function flushPromises() : Promise<any> {
-  return new Promise(setImmediate);
-}
 
 function setTimeoutPromiseResolve(time: number): Promise<any> {
   return new Promise((resolve) => {
