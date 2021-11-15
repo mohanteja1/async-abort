@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { combineReducers, createStore } from 'redux';
-import AsyncAbort from '../../dist/index';
+import AsyncAbort from '../../src/index.ts';
 import { useSelector } from 'react-redux';
 import { Provider } from 'react-redux';
 
@@ -154,7 +154,7 @@ class AsyncAbortComponent extends React.Component {
     this.cancel = null;
   }
   componentDidMount() {
-    this.cancel = new AsyncAbort(fetchTodosOfUser, [])
+    this.cancel = new AsyncAbort(fetchTodosOfUser)
     .then((todos) => {
       this.setState({ todos })
     }).catch((err) => {

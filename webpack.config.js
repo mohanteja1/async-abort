@@ -3,10 +3,12 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const devConfig = {
+  mode: 'development',
   entry: path.join(__dirname, "demo/src", "index.js"),
   output: {
-    path:path.resolve(__dirname, "demo/dist"),
+    path:path.resolve(__dirname, "demo/dist", "index.bundle.js"),
   },
+  devtool: 'source-map',
   module: {
     rules: [
       {
@@ -18,6 +20,18 @@ const devConfig = {
             presets: ['@babel/preset-env', '@babel/preset-react']
           }
         }
+      },
+      {
+        test: /\.ts(x?)$/,
+        exclude: [/node_modules/, /test/],
+        use: [
+          {
+            loader: 'babel-loader',
+          },
+          {
+            loader: 'ts-loader',
+          },
+        ],
       },
     ]
   },

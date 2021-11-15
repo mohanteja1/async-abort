@@ -2,15 +2,14 @@ declare type Callback = (...args: any[]) => any;
 declare type AsyncFunction = (...args: any[]) => Promise<any>;
 declare class AsyncAbort {
     id: string;
-    asyncFun: AsyncFunction | undefined;
-    asyncFunParams: Array<any>;
-    thenBlock: Callback | undefined;
-    catchBlock: Callback | undefined;
-    finallyBlock: Callback | undefined;
-    constructor(asyncFun: AsyncFunction, params?: Array<any>);
-    then(callback: Callback): AsyncAbort;
-    catch(callback: Callback): AsyncAbort;
-    finally(callback: Callback): AsyncAbort;
+    private func;
+    private args;
+    private chain;
+    constructor(func: AsyncFunction, args?: Array<any>);
+    then(cb: Callback): AsyncAbort;
+    catch(cb: Callback): AsyncAbort;
+    finally(cb: Callback): AsyncAbort;
+    private clearRefs;
     call(): Callback;
 }
 export default AsyncAbort;

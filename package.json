@@ -41,7 +41,6 @@
   },
   "homepage": "https://github.com/mohanteja1/async-abort#readme",
   "dependencies": {
-    "nanoid": "^3.1.30"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
