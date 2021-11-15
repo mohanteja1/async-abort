@@ -8,3 +8,6 @@ initial release
 
 ## v1.0.1
 
+added chaining
+removed dependencies
+updated docs
