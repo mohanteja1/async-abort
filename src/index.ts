@@ -1,82 +1,83 @@
-import { nanoid } from "nanoid";
-
 type Callback = (...args: any[]) => any;
 type AsyncFunction = (...args: any[]) => Promise<any>;
 
-class SimpleSingleCallbackObserver {
-    listeners: Map<string, Callback>;
+class Observer {
+    cbs: Map<string, Callback>;
+    count: number;
     constructor() {
-        this.listeners = new Map();
+        this.cbs = new Map();
+        this.count = 0;
     }
 
-    add(id: string, listener: Callback) {
-      if(!this.listeners.has(id)) this.listeners.set(id, listener);
+    add(id: string, cb: Callback) {
+      if(!this.cbs.has(id)) this.cbs.set(id, cb);
     }
 
     remove(id: string) {
-      this.listeners.delete(id);
+      this.cbs.delete(id);
     }
 
     emit(id: string, event: any) {
-      return this.listeners.get(id)?.(event);
+      return this.cbs.get(id)?.(event);
     }
 }
 
-const PromiseObserver = new SimpleSingleCallbackObserver();
-
+const PromiseObserver = new Observer();
 class AsyncAbort {
   id: string;
-  asyncFun: AsyncFunction;
-  asyncFunParams: Array<any>;
-  chain: Array<{ type: 'then' | 'catch' | 'finally', callback: Callback }>;
+  private func: AsyncFunction;
+  private args: Array<any>;
+  private chain: Array<{ type: 'then' | 'catch' | 'finally', cb: Callback }>;
 
-  constructor(asyncFun: AsyncFunction, params: Array<any> = []) {
-    this.id = nanoid(7);
-    this.asyncFun = asyncFun;
-    this.asyncFunParams = params;
+  constructor(func: AsyncFunction, args: Array<any> = []) {
+    this.id = `${Date.now()}_${++PromiseObserver.count}`;
+    this.func = func;
+    this.args = args;
     this.chain = [];
   }
 
-  then(callback: Callback): AsyncAbort {
-    this.chain.push({ type: 'then', callback});
+  then(cb: Callback): AsyncAbort {
+    this.chain.push({ type: 'then', cb});
     return this;
   }
 
-  catch(callback: Callback): AsyncAbort {
-    this.chain.push({ type: 'catch', callback});
+  catch(cb: Callback): AsyncAbort {
+    this.chain.push({ type: 'catch', cb });
     return this;
   }
 
-  finally(callback: Callback): AsyncAbort {
-    this.chain.push({ type: 'finally', callback});
+  finally(cb: Callback): AsyncAbort {
+    this.chain.push({ type: 'finally', cb });
     return this;
   }
 
-  private clearReferences() {
-    this.asyncFun = undefined;
-    this.asyncFunParams = undefined;
-    this.chain = undefined;
+  private clearRefs() {
+    this.func = this.args = this.chain = undefined;
   }
 
   call(): Callback {
-    this.chain.push({ type: 'finally', callback: () => PromiseObserver.remove(this.id)});
-    PromiseObserver.add(this.id, ({ index, value } : { value: any, index: number }) => this.chain[index].callback(value));
+    this.chain.push({ type: 'finally', cb: () => PromiseObserver.remove(this.id)});
+    PromiseObserver.add(this.id, ({ index, value } : { value: any, index: number }) => this.chain[index].cb(value));
     const cancel = () => {
       PromiseObserver.remove(this.id);
-      this.clearReferences();
+      this.clearRefs();
     };
-    let promise = this.asyncFun(...this.asyncFunParams);
+    let promise = this.func(...this.args);
     this.chain.forEach(({ type }, index) => {
       switch (type) {
         case 'then':
           promise = promise.then((value) => PromiseObserver.emit(this.id, { index, value }));
+          break;
         case 'catch':
           promise = promise.catch((error) => PromiseObserver.emit(this.id, { index, value: error }));
+          break;
         case 'finally':
           promise = promise.finally(() => PromiseObserver.emit(this.id, { index }));
+          break;
       }
     });
     return cancel;
   }
 }
+
 export default AsyncAbort;
