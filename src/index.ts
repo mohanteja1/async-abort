@@ -55,7 +55,6 @@ class AsyncAbort {
     this.chain.push({ type: 'finally', cb: () => PromiseObserver.remove(this.id)});
     PromiseObserver.add(this.id, ({ index, value } : { value: any, index: number }) => this.chain[index].cb(value));
     const id = this.id;
-    const cancel = () => PromiseObserver.remove(id);
     let promise = this.func(...this.args);
     this.chain.forEach(({ type }, index) => {
       switch (type) {
@@ -70,7 +69,7 @@ class AsyncAbort {
           break;
       }
     });
-    return cancel;
+    return () => PromiseObserver.remove(id);
   }
 }
 
