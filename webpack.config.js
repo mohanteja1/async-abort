@@ -54,8 +54,9 @@ const prodConfig = {
     libraryTarget: 'umd',
     globalObject: 'this',
     umdNamedDefine: true,
-    libraryExport: 'default'
+    libraryExport: 'default',
   },
+  devtool: 'source-map',
   watchOptions: {
     aggregateTimeout: 600,
     ignored: /node_modules/,

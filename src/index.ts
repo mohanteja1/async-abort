@@ -24,7 +24,7 @@ class Observer {
 
 const PromiseObserver = new Observer();
 class AsyncAbort {
-  id: string;
+  private id: string;
   private func: AsyncFunction;
   private args: Array<any>;
   private chain: Array<{ type: 'then' | 'catch' | 'finally', cb: Callback }>;
@@ -51,17 +51,11 @@ class AsyncAbort {
     return this;
   }
 
-  private clearRefs() {
-    this.func = this.args = this.chain = undefined;
-  }
-
   call(): Callback {
     this.chain.push({ type: 'finally', cb: () => PromiseObserver.remove(this.id)});
     PromiseObserver.add(this.id, ({ index, value } : { value: any, index: number }) => this.chain[index].cb(value));
-    const cancel = () => {
-      PromiseObserver.remove(this.id);
-      this.clearRefs();
-    };
+    const id = this.id;
+    const cancel = () => PromiseObserver.remove(id);
     let promise = this.func(...this.args);
     this.chain.forEach(({ type }, index) => {
       switch (type) {
