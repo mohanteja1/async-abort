@@ -4,7 +4,7 @@ declare class AsyncAbort {
     private id;
     private func;
     private args;
-    private chain;
+    private chains;
     constructor(func: AsyncFunction, args?: Array<any>);
     then(cb: Callback): AsyncAbort;
     catch(cb: Callback): AsyncAbort;

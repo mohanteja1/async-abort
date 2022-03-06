@@ -189,11 +189,12 @@ class AsyncAbortComponent extends React.Component {
 
 
 function SideNav(props) {
+  const component = useSelector((state) => state.Component.selected);
   return (
     <aside className="nav" >
         <button
           id={Components.FETCH}
-          className="nav-button"
+          className={`nav-button ${component === Components.FETCH ? 'button-selected' : ''}`}
           onClick={() => setComponent(Components.FETCH)}
         >
           fetch
@@ -201,7 +202,7 @@ function SideNav(props) {
         
         <button
           id={Components.ABORT_CONTROLLER}
-          className="nav-button"
+          className={`nav-button ${component === Components.ABORT_CONTROLLER ? 'button-selected' : ''}`}
           onClick={() => {setComponent(Components.ABORT_CONTROLLER)}}
         >
           abort controller
@@ -209,7 +210,7 @@ function SideNav(props) {
         
         <button
           id={Components.ASYNC_ABORT}
-          className="nav-button"
+          className={`nav-button ${component === Components.ASYNC_ABORT ? 'button-selected' : ''}`}
           onClick={() => {setComponent(Components.ASYNC_ABORT)}}
         >
           async-abort
@@ -217,7 +218,7 @@ function SideNav(props) {
        
         <button
           id={Components.NONE}
-          className="nav-button"
+          className={`nav-button ${component === Components.NONE ? 'button-selected' : ''}`}
           onClick={() => {setComponent(Components.NONE)}}
         >
           unmount current loading component
@@ -244,6 +245,7 @@ function SideNav(props) {
       </aside>
   );
 }
+
 
 function ComponentSelected(props) {
   const selected = useSelector((state) => state.Component.selected);
