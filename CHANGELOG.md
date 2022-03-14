@@ -8,20 +8,20 @@ initial release
 
 ## v1.0.1
 
-added chaining
-removed dependencies
-updated docs
+  1. added chaining
+  2. removed dependencies
+  3. updated docs
 
 ## v1.1.0
 
-changed scope of an internal var to private
-removed unnecessary clearing operation in cancel callback as it holds this reference
-add sourcemaps: (helps in local development)
+  1. changed scope of an internal var to private
+  2. removed unnecessary clearing operation in cancel callback as it holds this reference
+  3. add sourcemaps: (helps in local development)
 ## 2.0.0
 
-updated demo: highlighting which button is clicked
-fixed cancel callbacks having references to AsyncAbort instance in its closure
-refactored code
+  1. updated demo: highlighting which button is clicked
+  2. fixed cancel callbacks having references to AsyncAbort instance in its closure
+  3. refactored code
 
 
 
